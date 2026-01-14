@@ -87,14 +87,15 @@ export default function Home() {
 
             <FadeIn delay={0.1}>
               <h1 className="text-6xl md:text-8xl font-semibold tracking-tighter leading-[1.1] bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
-                The future of work.<br />
-                Verified on-chain.
+                Bouncccer: bounty for<br />
+                builder and influencers
               </h1>
             </FadeIn>
 
             <FadeIn delay={0.2}>
               <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-                A trustless bounty platform where funds are secured by code and reputation is soulbound.
+                Ship code. Create content. Get paid instantly. <br />
+                The <span className="text-blue-400 font-medium">JobFi</span> layer for the gig economy.
               </p>
             </FadeIn>
 
@@ -102,16 +103,16 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition-all duration-300 flex items-center gap-2"
+                  className="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition-all duration-300 flex items-center gap-2 shadow-lg shadow-blue-500/25"
                 >
-                  Start Building
+                  Start Bouncing
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
                   onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                   className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full text-lg font-medium transition-all flex items-center gap-2"
                 >
-                  Learn more
+                  How it Works
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
@@ -160,8 +161,8 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <FadeIn className="mb-16 text-center md:text-left">
               <h2 className="text-4xl md:text-6xl font-semibold tracking-tight mb-6">
-                Everything you need.<br />
-                <span className="text-gray-500">Nothing you don't.</span>
+                All Signal.<br />
+                <span className="text-gray-500">No Noise.</span>
               </h2>
             </FadeIn>
 
@@ -172,10 +173,10 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center mb-6 text-blue-400">
                     <Lock className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">Smart Escrow</h3>
+                  <h3 className="text-2xl font-semibold mb-2">Locked Funds. Zero Rugs.</h3>
                   <p className="text-gray-400 max-w-md text-lg">
-                    Funds are locked in a smart contract the moment a bounty is created.
-                    No more chasing invoices. Payment is guaranteed upon verified delivery.
+                    Funds are locked in a smart contract <strong>before</strong> you start working.
+                    You deliver the goods, you get the bag. It's that simple.
                   </p>
                 </div>
                 <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-30 group-hover:opacity-50 transition-opacity">
@@ -193,17 +194,17 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6 text-purple-400">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">Soulbound Reputation</h3>
+                  <h3 className="text-2xl font-semibold mb-2">Proof of Work</h3>
                   <p className="text-gray-400 text-lg">
-                    Your work history is minted as a Soulbound Token (SBT). Portable, verifiable, and immutable.
+                    Your commits are minted as Soulbound NFTs. Build your on-chain resume that travels with you forever.
                   </p>
                 </div>
                 <div className="mt-8 flex items-center gap-3">
                   <div className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-xs text-purple-300">
-                    Level 5 Solver
+                    Top 1% Solver
                   </div>
                   <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
-                    25 Bounties
+                    50+ Bounties
                   </div>
                 </div>
               </BentoCard>
@@ -214,9 +215,9 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-2xl bg-yellow-500/20 flex items-center justify-center mb-6 text-yellow-400">
                     <Zap className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">Instant Settlement</h3>
+                  <h3 className="text-2xl font-semibold mb-2">Instant Payday</h3>
                   <p className="text-gray-400">
-                    Payments are executed atomically on-chain. No delays, no banks, no borders.
+                    No "Net-30". No chasing invoices. Payments execute atomically the second your work is accepted.
                   </p>
                 </div>
               </BentoCard>
@@ -227,9 +228,9 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-2xl bg-green-500/20 flex items-center justify-center mb-6 text-green-400">
                     <Globe className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">Multi-Chain Native</h3>
+                  <h3 className="text-2xl font-semibold mb-2">Build Anywhere</h3>
                   <p className="text-gray-400 text-lg">
-                    Deployed on Base and Arbitrum. Choose the ecosystem that fits your needs with low fees and high speed.
+                    Native on Arbitrum and Base. Low fees, high speed, and the best developer communities in crypto.
                   </p>
                 </div>
                 <div className="flex-1 w-full grid grid-cols-2 gap-4 opacity-50">
@@ -269,10 +270,11 @@ export default function Home() {
           <div className="max-w-3xl mx-auto relative z-10">
             <FadeIn>
               <h2 className="text-5xl md:text-7xl font-semibold tracking-tighter mb-8">
-                Ready to start?
+                Stop Waiting.<br />
+                Start Bouncing.
               </h2>
               <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
-                Join thousands of developers and companies building the future of work on Bouncccer.
+                Join thousands of builders and influencers getting paid instantly for their work.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button
@@ -282,7 +284,7 @@ export default function Home() {
                   Launch App
                 </button>
                 <button className="px-10 py-4 bg-black border border-white/20 text-white rounded-full text-lg font-bold hover:bg-white/10 transition-colors w-full sm:w-auto">
-                  View Documentation
+                  View Docs
                 </button>
               </div>
             </FadeIn>

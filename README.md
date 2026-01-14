@@ -1,124 +1,67 @@
-# Quintle - Quest on Mantle
+# 🏀 BOUNCCCER
 
-> **Escrow replaces trust with truth — funds don't lie.**
-
-Quintle is a trustless bounty platform built on Mantle that combines on-chain bounties with permanent soulbound reputation.
-
-## Key Features
-
-- **100% Escrow Protection** - All funds locked upfront, eliminating payment risk
-- **Soulbound Reputation** - Permanent on-chain achievements via NFT badges
-- **Zero Platform Fees** - No middleman cuts
-- **Full Transparency** - All transactions visible on Mantle blockchain
-
-## Core Products
-
-### 1. Bounty System
-
-Task-based work with blinded submissions and automatic slashing for fair resolution.
-
-### 2. Soulbound Reputation
-
-NFT badges that represent your on-chain work history. Immutable and tied to your wallet forever.
-
-## Network Information
-
-**Mantle Sepolia (Testnet)**
-
-- Chain ID: 5003
-- RPC: https://rpc.sepolia.mantle.xyz
-- Explorer: https://sepolia.mantlescan.xyz
-
-## Quick Start
-
-```bash
-# Install dependencies
-pnpm install
-
-# Set up environment
-cp .env.example .env.local
-# Add your Pinata JWT and WalletConnect Project ID
-
-# Run development server
-pnpm run dev
-```
-
-Visit http://localhost:3000
-
-## Contract Addresses (Mantle Sepolia)
-
-| Contract   | Address                                      |
-| ---------- | -------------------------------------------- |
-| Quintle    | `0x0000000000000000000000000000000000000000` |
-| Reputation | `0x0000000000000000000000000000000000000000` |
-| NFT Badges | `0x0000000000000000000000000000000000000000` |
-
-> Note: Update these addresses after deploying contracts to Mantle Sepolia
-
-## Tech Stack
-
-**Frontend:**
-
-- Next.js 15 + React 19 + TypeScript
-- Tailwind CSS + shadcn/ui
-- Wagmi v2 + Viem + RainbowKit
-
-**Smart Contracts:**
-
-- Solidity 0.8.28
-- OpenZeppelin (ReentrancyGuard, Ownable)
-- Mantle Sepolia (Chain ID 5003)
-
-**Storage:**
-
-- IPFS (submissions, proofs, NFT metadata)
-- Pinata (pinning service)
-
-## Security
-
-All contracts use:
-
-- ReentrancyGuard on all fund transfers
-- Ownable for admin functions
-- Proper access control modifiers
-- MNT transfer via `.call{value: X}("")`
-- Validation of inputs and state
-- Event emission for all state changes
-
-## Why Mantle?
-
-Quintle is built on **Mantle** because:
-
-1. **Low Fees** - Ultra-low gas costs
-2. **Fast Finality** - Quick block times
-3. **Ethereum Security** - Inherits Ethereum's security via L2
-4. **Growing Ecosystem** - Thriving developer community
-
-## The Quintle Promise
-
-> **"Locked funds. Unlocked trust. Your boss can't rug you here."**
-
-We're building infrastructure for the onchain work economy where:
-
-- **Trust is enforced by code**, not corporations
-- **Reputation truly belongs to you** (soulbound NFTs)
-- **Work is global and permissionless**
-- **Value flows directly** between creators and builders
-
-## Contributing
-
-We welcome contributions! Please:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-MIT - Open source and free to use.
+> **"Bouncccer: bounty for builder and influencers"**
 
 ---
 
-**Built with love for Mantle and the onchain economy.**
+### 💀 The Problem:
+You ship code. You make content. **You wait to get paid.**
+Invoices get lost. Clients ghost. "Net-30" becomes "Net-Never".
+
+### ⚡️ The Fix:
+**Bouncccer** is the **JobFi** layer for the gig economy.
+Funds are locked **before** you start. You deliver. You get paid. **Instantly.**
+
+---
+
+## � How It Works (The Flow)
+
+We kept it simple. No complex proposals. Just proof of work.
+
+1.  **Browse & Hunt** 🎯
+    Find a bounty that matches your skills (coding, design, or marketing).
+
+2.  **Hack & Prove** 🛠
+    Do the work. Submit a **proof** (screenshot, demo, or encrypted preview) to show you're capable.
+
+3.  **Get Chosen** 🏆
+    The Bounty Creator reviews submissions and selects **you** as the winner.
+
+4.  **Deliver & Earn** 💸
+    You hand over the full code or service. The smart contract automatically releases the funds to your wallet.
+
+---
+
+## �💎 Why You're Here
+
+### 🏗 For Builders
+*   **Code -> Cash**: Solve issues, submit PRs, get tokens.
+*   **Proof of Work**: Your commits are minted as **Soulbound NFTs**. Your GitHub profile, but on-chain and immutable.
+*   **No Rugs**: If the money isn't in the contract, you don't write a line of code.
+
+### 📣 For Influencers
+*   **Viral = Value**: Bounties for tweets, threads, and videos.
+*   **Verify Impact**: Prove your reach on-chain.
+*   **Instant Settlement**: No more chasing marketing managers for your fee.
+
+---
+
+Built on **Arbitrum Sepolia** for speed and low fees.
+
+---
+
+## 📜 Contract Zone (Arbitrum Sepolia)
+
+Verified. Check them yourself.
+
+*   **Quinty (Main Logic)**: [`0xd2AC...E4af`](https://sepolia.arbiscan.io/address/0xd2AC810cFDCC68B6297a34b9754E4FF0335FE4af)
+*   **Reputation (SBT)**: [`0x4D3A...0fb`](https://sepolia.arbiscan.io/address/0x4D3ACbAFCd1fc9BaCF1aaFEbb903B85552a2a0fb)
+*   **Badges (NFTs)**: [`0xBe17...53a`](https://sepolia.arbiscan.io/address/0xBe17D9c0221b51E02ba0a131CB417D301724853a)
+
+---
+
+### 🤝 Join the Movement
+This isn't just a platform. It's a **meritocracy**.
+If you build, you belong.
+
+**[ Start Bouncing ]**
