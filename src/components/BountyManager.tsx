@@ -30,6 +30,7 @@ import {
 } from "./ui/select";
 import {
   Plus,
+  Minus,
   X,
   Target,
   Upload,
@@ -38,7 +39,9 @@ import {
   Filter,
   LayoutGrid,
   List as ListIcon,
-  ChevronRight
+  ChevronRight,
+  Users,
+  Trophy
 } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 
@@ -79,7 +82,7 @@ interface Bounty {
 export default function BountyManager() {
   const { isConnected, address } = useAccount();
   const chainId = useChainId();
-  const { writeContract, data: hash, isPending } = useWriteContract();
+  const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash });
 
@@ -113,6 +116,7 @@ export default function BountyManager() {
   const [deadlineTime, setDeadlineTime] = useState("23:59");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Sync date and time to deadline field
   useEffect(() => {
@@ -176,6 +180,49 @@ export default function BountyManager() {
     eventName: "BountyCreated",
     onLogs() { loadBountiesAndSubmissions(); },
   });
+
+  // Handle image file selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+    }
+  };
+
+  // Remove image from upload list
+  const removeImage = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle drag events
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const newFiles = Array.from(files).filter((file) =>
+        file.type.startsWith("image/")
+      );
+      if (newFiles.length > 0) {
+        setUploadedFiles((prev) => [...prev, ...newFiles]);
+      }
+    }
+  };
 
   const uploadImages = async (): Promise<string[]> => {
     if (uploadedFiles.length === 0) return [];
@@ -272,6 +319,24 @@ export default function BountyManager() {
       return;
     }
 
+    if (!newBounty.amount || parseFloat(newBounty.amount) <= 0) {
+      alert("Amount must be greater than 0");
+      return;
+    }
+
+    if (newBounty.slashPercent < 25 || newBounty.slashPercent > 50) {
+      alert("Slash percent must be between 25% and 50%");
+      return;
+    }
+
+    if (newBounty.allowMultipleWinners) {
+      const totalShares = newBounty.winnerShares.reduce((a, b) => a + b, 0);
+      if (totalShares !== 100) {
+        alert("Winner shares must sum to 100%");
+        return;
+      }
+    }
+
     try {
       const imageCids = await uploadImages();
       const metadata: BountyMetadata = {
@@ -364,6 +429,48 @@ export default function BountyManager() {
   };
 
   const filteredBounties = getFilteredBounties();
+
+  // Helper for dynamic list inputs
+  const renderListInput = (
+    items: string[],
+    onChange: (newItems: string[]) => void,
+    placeholder: string
+  ) => (
+    <div className="space-y-2">
+      {items.map((item, index) => (
+        <div key={index} className="flex gap-2">
+          <Input
+            value={item}
+            onChange={(e) => {
+              const newItems = [...items];
+              newItems[index] = e.target.value;
+              onChange(newItems);
+            }}
+            placeholder={placeholder}
+            className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-blue-500/50"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => onChange(items.filter((_, i) => i !== index))}
+            className="bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-red-500/20"
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onChange([...items, ""])}
+        className="w-full bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10 border-dashed"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Add Item
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
@@ -459,9 +566,13 @@ export default function BountyManager() {
           </div>
 
           <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="space-y-6">
+            <div className="space-y-8">
+              {/* Basic Details */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Basic Details</h3>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white">1</span>
+                  Basic Details
+                </h3>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white">Title</label>
@@ -498,6 +609,7 @@ export default function BountyManager() {
                         <SelectItem value="design">Design</SelectItem>
                         <SelectItem value="marketing">Marketing</SelectItem>
                         <SelectItem value="research">Research</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -513,11 +625,156 @@ export default function BountyManager() {
                   />
                 </div>
               </div>
+
+              {/* Advanced Settings */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white">2</span>
+                  Advanced Settings
+                </h3>
+
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <label className="text-sm font-medium text-white">Slash Percentage</label>
+                      <span className="text-sm font-bold text-blue-400">{newBounty.slashPercent}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="25"
+                      max="50"
+                      value={newBounty.slashPercent}
+                      onChange={(e) => setNewBounty({ ...newBounty, slashPercent: parseInt(e.target.value) })}
+                      className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="hasOprec"
+                      checked={newBounty.hasOprec}
+                      onChange={(e) => setNewBounty({ ...newBounty, hasOprec: e.target.checked })}
+                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20"
+                    />
+                    <label htmlFor="hasOprec" className="text-sm text-white">Enable OPREC (Open Recruitment)</label>
+                  </div>
+
+                  {newBounty.hasOprec && (
+                    <div className="pl-7 space-y-2">
+                      <label className="text-xs text-gray-400">OPREC Deadline</label>
+                      <Input
+                        type="datetime-local"
+                        value={newBounty.oprecDeadline}
+                        onChange={(e) => setNewBounty({ ...newBounty, oprecDeadline: e.target.value })}
+                        className="bg-white/5 border-white/10 text-white"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="allowMultipleWinners"
+                      checked={newBounty.allowMultipleWinners}
+                      onChange={(e) => setNewBounty({
+                        ...newBounty,
+                        allowMultipleWinners: e.target.checked,
+                        winnerShares: e.target.checked ? [50, 50] : [100]
+                      })}
+                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-blue-500 focus:ring-blue-500/20"
+                    />
+                    <label htmlFor="allowMultipleWinners" className="text-sm text-white">Allow Multiple Winners</label>
+                  </div>
+
+                  {newBounty.allowMultipleWinners && (
+                    <div className="pl-7 space-y-2">
+                      <label className="text-xs text-gray-400">Winner Shares (%)</label>
+                      {newBounty.winnerShares.map((share, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            type="number"
+                            value={share}
+                            onChange={(e) => {
+                              const newShares = [...newBounty.winnerShares];
+                              newShares[index] = parseInt(e.target.value) || 0;
+                              setNewBounty({ ...newBounty, winnerShares: newShares });
+                            }}
+                            className="bg-white/5 border-white/10 text-white"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const newShares = newBounty.winnerShares.filter((_, i) => i !== index);
+                              setNewBounty({ ...newBounty, winnerShares: newShares });
+                            }}
+                            className="bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNewBounty({ ...newBounty, winnerShares: [...newBounty.winnerShares, 0] })}
+                        className="w-full bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                      >
+                        <Plus className="w-3 h-3 mr-2" /> Add Share
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
+              {/* Requirements & Skills */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Timeline & Assets</h3>
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white">3</span>
+                  Requirements & Skills
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white">Requirements</label>
+                    {renderListInput(
+                      newBounty.requirements,
+                      (newItems) => setNewBounty({ ...newBounty, requirements: newItems }),
+                      "Add a requirement..."
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white">Deliverables</label>
+                    {renderListInput(
+                      newBounty.deliverables,
+                      (newItems) => setNewBounty({ ...newBounty, deliverables: newItems }),
+                      "Add a deliverable..."
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white">Skills</label>
+                    {renderListInput(
+                      newBounty.skills,
+                      (newItems) => setNewBounty({ ...newBounty, skills: newItems }),
+                      "e.g. React, Solidity..."
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline & Assets */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-white">4</span>
+                  Timeline & Assets
+                </h3>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white">Deadline</label>
@@ -538,14 +795,17 @@ export default function BountyManager() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white">Images (Optional)</label>
-                  <div className="border-2 border-dashed border-white/10 rounded-xl p-6 text-center hover:bg-white/5 transition-colors cursor-pointer relative">
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer relative ${isDragOver ? "border-blue-500 bg-blue-500/10" : "border-white/10 hover:bg-white/5"}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
                     <input
                       type="file"
                       multiple
                       accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files) setUploadedFiles(Array.from(e.target.files));
-                      }}
+                      onChange={handleImageSelect}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                     <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
@@ -555,9 +815,42 @@ export default function BountyManager() {
                         : "Drop images here or click to upload"}
                     </p>
                   </div>
+
+                  {uploadedFiles.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt="Preview"
+                            className="w-full h-full object-cover rounded-lg border border-white/10"
+                          />
+                          <button
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 space-y-4">
+                  {hash && (
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <p className="text-xs text-blue-400 break-all">
+                        Tx: <a href={`https://sepolia.arbiscan.io/tx/${hash}`} target="_blank" rel="noreferrer" className="underline">{hash}</a>
+                      </p>
+                    </div>
+                  )}
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                      <p className="text-xs text-red-500">{error.message}</p>
+                    </div>
+                  )}
+
                   <Button
                     onClick={createBounty}
                     disabled={isPending || isUploadingImages}
