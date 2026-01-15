@@ -50,6 +50,46 @@ Built on **Arbitrum Sepolia** for speed and low fees.
 
 ---
 
+## 💻 Run Locally
+
+1. **Clone & Install**
+   ```bash
+   git clone https://github.com/bouncccer/fe-bouncccer.git
+   cd fe-bouncccer
+   pnpm install
+   ```
+
+2. **Env Setup**
+   ```bash
+   cp .env.example .env.local
+   # Fill in your NEXT_PUBLIC_PINATA_JWT and NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+   ```
+
+3. **Start Hacking**
+   ```bash
+   pnpm run dev
+   ```
+
+## 🚀 Deploy to Netlify
+
+**Option A: Netlify Dashboard (Recommended)**
+1. Push your code to GitHub.
+2. Log in to [Netlify](https://app.netlify.com).
+3. Click **"Add new site"** > **"Import an existing project"**.
+4. Select your repo.
+5. Add your Environment Variables (`NEXT_PUBLIC_PINATA_JWT`, etc.) in "Site settings".
+6. Click **Deploy**.
+
+**Option B: Netlify CLI**
+```bash
+npm install netlify-cli -g
+netlify login
+netlify init
+netlify deploy --prod
+```
+
+---
+
 ## 📜 Contract Zone (Arbitrum Sepolia)
 
 Verified. Check them yourself.
