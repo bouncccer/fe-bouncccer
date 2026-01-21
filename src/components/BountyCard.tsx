@@ -51,6 +51,15 @@ export default function BountyCard({ bounty, viewMode = "grid" }: BountyCardProp
   const [quickView, setQuickView] = useState(false);
   const { shareLink } = useShare();
   const [ethPrice, setEthPrice] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    setTimeLeft(formatTimeLeft(bounty.deadline));
+    const interval = setInterval(() => {
+      setTimeLeft(formatTimeLeft(bounty.deadline));
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [bounty.deadline]);
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -146,7 +155,7 @@ export default function BountyCard({ bounty, viewMode = "grid" }: BountyCardProp
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>{formatTimeLeft(bounty.deadline)}</span>
+                  <span>{timeLeft}</span>
                 </div>
               </div>
 
@@ -235,7 +244,7 @@ export default function BountyCard({ bounty, viewMode = "grid" }: BountyCardProp
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>{formatTimeLeft(bounty.deadline)}</span>
+                  <span>{timeLeft}</span>
                 </div>
               </div>
               <div>#{bounty.id}</div>
@@ -328,7 +337,7 @@ export default function BountyCard({ bounty, viewMode = "grid" }: BountyCardProp
                   <Clock className="w-5 h-5 text-green-500" />
                 </div>
                 <div className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Time Left</div>
-                <div className="text-xl font-bold text-white">{formatTimeLeft(bounty.deadline)}</div>
+                <div className="text-xl font-bold text-white">{timeLeft}</div>
               </div>
             </div>
 

@@ -51,10 +51,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${jakartaSans.variable}`}>
+    <html lang="en" className={`${jakartaSans.variable}`} suppressHydrationWarning>
       <head>
       </head>
-      <body className={`${jakartaSans.className} antialiased bg-black text-white selection:bg-blue-500/30`}>
+      <body className={`${jakartaSans.className} antialiased bg-black text-white selection:bg-blue-500/30`} suppressHydrationWarning>
         <Providers>
           <Header />
           {children}

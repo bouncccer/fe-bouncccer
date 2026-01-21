@@ -10,7 +10,7 @@ import {
     ARBITRUM_SEPOLIA_CHAIN_ID,
 } from "../../utils/contracts";
 import { formatETH, wagmiConfig } from "../../utils/web3";
-import { useIndexerUserHistory } from "../../hooks/useIndexer";
+// INDEXER DISABLED - import { useIndexerUserHistory } from "../../hooks/useIndexer";
 import {
     Target,
     Calendar,
@@ -40,113 +40,57 @@ export default function HistoryPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (address) {
-            loadTransactionHistory();
-        }
-    }, [address, chainId]);
-
-    const { data: historyData, isLoading: isIndexerLoading } = useIndexerUserHistory(address || "");
-
-    const [isFallbackLoading, setIsFallbackLoading] = useState(false);
+    // INDEXER DISABLED - Using on-chain data only
+    // const { data: historyData, isLoading: isIndexerLoading } = useIndexerUserHistory(address || "");
 
     useEffect(() => {
-        const loadFallback = async () => {
-            if (address && !isIndexerLoading && historyData?.bounties.length === 0 && historyData?.submissions.length === 0 && !isFallbackLoading) {
-                setIsFallbackLoading(true);
-                try {
-                    const counter = await readContract(wagmiConfig, {
+        const loadOnChainHistory = async () => {
+            if (!address) {
+                setIsLoading(false);
+                return;
+            }
+
+            setIsLoading(true);
+            try {
+                const counter = await readContract(wagmiConfig, {
+                    address: CONTRACT_ADDRESSES[chainId]?.Quinty as `0x${string}`,
+                    abi: QUINTY_ABI,
+                    functionName: "bountyCounter",
+                });
+
+                const userTransactions: Transaction[] = [];
+                for (let i = 1; i <= Number(counter); i++) {
+                    const data = await readContract(wagmiConfig, {
                         address: CONTRACT_ADDRESSES[chainId]?.Quinty as `0x${string}`,
                         abi: QUINTY_ABI,
-                        functionName: "bountyCounter",
+                        functionName: "getBountyData",
+                        args: [BigInt(i)],
                     });
-
-                    const userTransactions: Transaction[] = [];
-                    for (let i = 1; i <= Number(counter); i++) {
-                        const data = await readContract(wagmiConfig, {
-                            address: CONTRACT_ADDRESSES[chainId]?.Quinty as `0x${string}`,
-                            abi: QUINTY_ABI,
-                            functionName: "getBountyData",
-                            args: [BigInt(i)],
-                        });
-                        if (data) {
-                            const d = data as any[];
-                            const creator = d[0];
-                            if (creator.toLowerCase() === address.toLowerCase()) {
-                                userTransactions.push({
-                                    id: `fallback-created-${i}`,
-                                    type: "bounty_created",
-                                    itemId: i,
-                                    amount: d[2],
-                                    timestamp: BigInt(Math.floor(Date.now() / 1000)), // Fallback timestamp
-                                    status: Number(d[6]) === 1 ? "Open" : "Resolved",
-                                    description: d[1].split("\n")[0],
-                                });
-                            }
+                    if (data) {
+                        const d = data as any[];
+                        const creator = d[0];
+                        if (creator.toLowerCase() === address.toLowerCase()) {
+                            userTransactions.push({
+                                id: `created-${i}`,
+                                type: "bounty_created",
+                                itemId: i,
+                                amount: d[2],
+                                timestamp: BigInt(0), // On-chain doesn't store timestamp
+                                status: Number(d[6]) === 1 ? "Open" : "Resolved",
+                                description: d[1].split("\n")[0],
+                            });
                         }
                     }
-                    setTransactions(userTransactions);
-                } catch (e) {
-                    console.error("History fallback error:", e);
-                } finally {
-                    setIsFallbackLoading(false);
                 }
+                setTransactions(userTransactions);
+            } catch (e) {
+                console.error("History on-chain load error:", e);
+            } finally {
+                setIsLoading(false);
             }
         };
-        loadFallback();
-    }, [address, historyData, isIndexerLoading, chainId]);
-
-    useEffect(() => {
-        if (address && historyData && (historyData.bounties.length > 0 || historyData.submissions.length > 0)) {
-            const allTransactions: Transaction[] = [];
-
-            // Add bounties created
-            historyData.bounties.forEach((b: any) => {
-                allTransactions.push({
-                    id: `bounty-created-${b.id}`,
-                    type: "bounty_created",
-                    itemId: parseInt(b.id.split("-").pop()),
-                    amount: BigInt(b.amount),
-                    timestamp: BigInt(b.timestamp),
-                    status: b.status,
-                    description: b.title || b.description.split("\n")[0] || `Bounty #${b.id}`,
-                });
-            });
-
-            // Add submissions
-            historyData.submissions.forEach((s: any) => {
-                const bountyId = parseInt(s.bountyId.split("-").pop());
-
-                allTransactions.push({
-                    id: `bounty-submitted-${s.id}`,
-                    type: "bounty_submitted",
-                    itemId: bountyId,
-                    amount: 0n, // Deposit info not in event currently
-                    timestamp: BigInt(s.timestamp),
-                    status: s.isRevealed ? "Revealed" : "Submitted",
-                    description: s.bounty?.title || s.bounty?.description?.split("\n")[0] || `Bounty #${bountyId}`,
-                });
-
-                if (s.isWinner) {
-                    allTransactions.push({
-                        id: `bounty-won-${s.id}`,
-                        type: "bounty_won",
-                        itemId: bountyId,
-                        amount: BigInt(s.bounty?.amount || 0),
-                        timestamp: BigInt(s.timestamp),
-                        status: "Won",
-                        description: s.bounty?.title || s.bounty?.description?.split("\n")[0] || `Bounty #${bountyId}`,
-                    });
-                }
-            });
-
-            allTransactions.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
-            setTransactions(allTransactions);
-            setIsLoading(false);
-        } else if (!isIndexerLoading && !isFallbackLoading) {
-            setIsLoading(false);
-        }
-    }, [address, historyData, isIndexerLoading, isFallbackLoading]);
+        loadOnChainHistory();
+    }, [address, chainId]);
 
     const loadTransactionHistory = async () => {
         // Kept for compatibility or fallback, but primarily using the useEffect above

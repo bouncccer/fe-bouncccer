@@ -1,5 +1,6 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { mantleSepoliaTestnet, baseSepolia, arbitrumSepolia } from "wagmi/chains";
+import { http } from "wagmi";
 
 // Fix for "indexedDB is not defined" during SSR
 if (typeof window === 'undefined') {
@@ -10,10 +11,15 @@ if (typeof window === 'undefined') {
 }
 
 export const wagmiConfig = getDefaultConfig({
-  appName: "Quintle",
+  appName: "Bouncccer",
   // Fallback to a dummy ID to prevent build failure if env var is missing
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "3fcc6b4468bd933c2341d716d471ac0a",
-  chains: [mantleSepoliaTestnet, baseSepolia, arbitrumSepolia],
+  chains: [arbitrumSepolia, baseSepolia, mantleSepoliaTestnet],
+  transports: {
+    [arbitrumSepolia.id]: http("https://sepolia-rollup.arbitrum.io/rpc"),
+    [baseSepolia.id]: http("https://sepolia.base.org"),
+    [mantleSepoliaTestnet.id]: http("https://rpc.sepolia.mantle.xyz"),
+  },
   ssr: true,
 });
 

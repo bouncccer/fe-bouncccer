@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-const PONDER_URL = process.env.NEXT_PUBLIC_PONDER_URL || "http://127.0.0.1:42069";
+const PONDER_URL = process.env.NEXT_PUBLIC_PONDER_URL || "https://idxr-bouncccer.fly.dev";
 
 async function fetchFromIndexer(query: string, variables?: any) {
   try {
@@ -8,7 +8,7 @@ async function fetchFromIndexer(query: string, variables?: any) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, variables }),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(3000), // 3s timeout
     });
 
     if (!response.ok) {
@@ -17,13 +17,13 @@ async function fetchFromIndexer(query: string, variables?: any) {
 
     const result = await response.json();
     if (result.errors) {
-      console.error("Indexer GraphQL Errors:", result.errors);
-      return null;
+      console.warn("Indexer GraphQL Errors:", result.errors);
+      return { data: null, error: result.errors };
     }
-    return result.data;
-  } catch (error) {
-    console.error("Indexer Connection Error:", error);
-    return null;
+    return { data: result.data, error: null };
+  } catch (error: any) {
+    console.warn("Indexer Connection Error:", error.message || error);
+    return { data: null, error: error.message || "Connection failed" };
   }
 }
 
@@ -31,7 +31,7 @@ export function useIndexerBounties() {
   return useQuery({
     queryKey: ["indexer-bounties"],
     queryFn: async () => {
-      const data = await fetchFromIndexer(`
+      const { data, error } = await fetchFromIndexer(`
         query GetBounties {
           bountys(orderBy: "timestamp", orderDirection: "desc") {
             items {
@@ -58,8 +58,15 @@ export function useIndexerBounties() {
           }
         }
       `);
+
+      if (error || !data) {
+        throw new Error(error || "No data");
+      }
+
       return data?.bountys?.items || [];
     },
+    retry: 1,
+    retryDelay: 1000,
   });
 }
 
@@ -68,7 +75,7 @@ export function useIndexerUser(address: string) {
     queryKey: ["indexer-user", address],
     enabled: !!address,
     queryFn: async () => {
-      const data = await fetchFromIndexer(`
+      const { data, error } = await fetchFromIndexer(`
         query GetUser($id: String!) {
           user(id: $id) {
             id
@@ -79,8 +86,11 @@ export function useIndexerUser(address: string) {
           }
         }
       `, { id: address.toLowerCase() });
-      return data?.user || null;
+
+      if (error || !data) return null;
+      return data.user || null;
     },
+    retry: false,
   });
 }
 
@@ -89,7 +99,7 @@ export function useIndexerUserHistory(address: string) {
     queryKey: ["indexer-user-history", address],
     enabled: !!address,
     queryFn: async () => {
-      const data = await fetchFromIndexer(`
+      const { data, error } = await fetchFromIndexer(`
         query GetUserHistory($address: String!) {
           bountys(where: { creator: $address }, orderBy: "timestamp", orderDirection: "desc") {
             items {
@@ -120,11 +130,16 @@ export function useIndexerUserHistory(address: string) {
         }
       `, { address: address.toLowerCase() });
 
+      if (error || !data) {
+        return { bounties: [], submissions: [] };
+      }
+
       return {
-        bounties: data?.bountys?.items || [],
-        submissions: data?.submissions?.items || [],
+        bounties: data.bountys?.items || [],
+        submissions: data.submissions?.items || [],
       };
     },
+    retry: false,
   });
 }
 
@@ -132,7 +147,7 @@ export function useIndexerLeaderboard() {
   return useQuery({
     queryKey: ["indexer-leaderboard"],
     queryFn: async () => {
-      const data = await fetchFromIndexer(`
+      const { data, error } = await fetchFromIndexer(`
         query GetLeaderboard {
           topCreators: users(orderBy: "totalVolumeCreated", orderDirection: "desc", limit: 5) {
             items {
@@ -148,10 +163,16 @@ export function useIndexerLeaderboard() {
           }
         }
       `);
+
+      if (error || !data) {
+        return { topCreators: [], topSolvers: [] };
+      }
+
       return {
-        topCreators: data?.topCreators?.items || [],
-        topSolvers: data?.topSolvers?.items || [],
+        topCreators: data.topCreators?.items || [],
+        topSolvers: data.topSolvers?.items || [],
       };
     },
+    retry: false,
   });
 }

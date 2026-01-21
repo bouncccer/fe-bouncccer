@@ -76,16 +76,22 @@ export const uploadToIpfs = async (
     data.append('pinataMetadata', pinataMetadata);
   }
 
+  const pinataJwt = process.env.NEXT_PUBLIC_PINATA_JWT;
+  if (!pinataJwt) {
+    console.error("IPFS Upload Error: NEXT_PUBLIC_PINATA_JWT is not set.");
+    throw new Error("IPFS configuration missing. Please check environment variables.");
+  }
+
   const headers = {
-    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT || ''}`
+    'Authorization': `Bearer ${pinataJwt}`
   };
 
   try {
     const res = await axios.post(url, data, { headers });
     return res.data.IpfsHash;
-  } catch (error) {
-    console.error("IPFS upload failed:", error);
-    throw new Error("Failed to upload to IPFS");
+  } catch (error: any) {
+    console.error("IPFS upload failed:", error.response?.data || error.message);
+    throw new Error("Failed to upload to IPFS. Please try again.");
   }
 };
 

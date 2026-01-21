@@ -13,11 +13,12 @@ import { readContract } from "@wagmi/core";
 import {
   CONTRACT_ADDRESSES,
   QUINTY_ABI,
+  ARBITRUM_SEPOLIA_CHAIN_ID,
 } from "../utils/contracts";
 import { parseETH, wagmiConfig } from "../utils/web3";
 import BountyCard from "./BountyCard";
 import { uploadMetadataToIpfs, uploadToIpfs, BountyMetadata } from "../utils/ipfs";
-import { useIndexerBounties } from "../hooks/useIndexer";
+// INDEXER DISABLED - import { useIndexerBounties } from "../hooks/useIndexer";
 import { mockBounties } from "../utils/mockBounties";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -81,7 +82,12 @@ interface Bounty {
 
 export default function BountyManager() {
   const { isConnected, address } = useAccount();
-  const chainId = useChainId();
+  const walletChainId = useChainId();
+  // Default to Arbitrum Sepolia if not connected or if connected to an unsupported chain
+  const chainId = isConnected && CONTRACT_ADDRESSES[walletChainId]
+    ? walletChainId
+    : ARBITRUM_SEPOLIA_CHAIN_ID;
+
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash });
@@ -92,6 +98,15 @@ export default function BountyManager() {
   const [showMyBounties, setShowMyBounties] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    setNow(Math.floor(Date.now() / 1000));
+    const interval = setInterval(() => {
+      setNow(Math.floor(Date.now() / 1000));
+    }, 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, []);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Form states
@@ -134,44 +149,21 @@ export default function BountyManager() {
     address: CONTRACT_ADDRESSES[chainId].Quinty as `0x${string}`,
     abi: QUINTY_ABI,
     functionName: "bountyCounter",
+    chainId,
     query: { enabled: true, retry: false, refetchOnWindowFocus: false },
   });
 
-  const { data: indexerBounties, isLoading: isIndexerLoading } = useIndexerBounties();
+  // INDEXER DISABLED - Using on-chain data only
+  // const { data: indexerBounties, isLoading: isIndexerLoading, isError: isIndexerError } = useIndexerBounties();
   const hasLoadedRef = useRef(false);
 
-  // Sync indexer data
+  // Load on-chain data directly
   useEffect(() => {
-    if (indexerBounties && indexerBounties.length > 0) {
-      const mappedBounties = indexerBounties.map((b: any) => ({
-        id: parseInt(b.id.split("-").pop()),
-        creator: b.creator,
-        description: b.description,
-        amount: BigInt(b.amount),
-        deadline: BigInt(b.deadline),
-        status: b.status === "OPREC" ? 0 : b.status === "OPEN" ? 1 : b.status === "RESOLVED" ? 3 : b.status === "EXPIRED" ? 4 : 2,
-        allowMultipleWinners: true,
-        winnerShares: [100n],
-        slashPercent: 30n,
-        selectedWinners: [],
-        selectedSubmissionIds: [],
-        hasOprec: b.hasOprec,
-        oprecDeadline: 0n,
-        metadataCid: b.description,
-        submissions: b.submissions?.items?.map((s: any) => ({
-          id: s.id,
-          solver: s.solver,
-          isWinner: s.isWinner,
-          isRevealed: s.isRevealed,
-        })) || [],
-      }));
-      setBounties(mappedBounties);
-      hasLoadedRef.current = true;
-    } else if (!isIndexerLoading && bountyCounter && !hasLoadedRef.current) {
+    if (bountyCounter && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
       loadBountiesAndSubmissions();
     }
-  }, [indexerBounties, isIndexerLoading, bountyCounter]);
+  }, [bountyCounter]);
 
   // Watch for events
   useWatchContractEvent({
@@ -257,6 +249,7 @@ export default function BountyManager() {
             abi: QUINTY_ABI,
             functionName: "getBountyData",
             args: [BigInt(id)],
+            chainId: chainId as any,
           });
 
           if (bountyData) {
@@ -266,6 +259,7 @@ export default function BountyManager() {
               abi: QUINTY_ABI,
               functionName: "getSubmissionCount",
               args: [BigInt(id)],
+              chainId: chainId as any,
             });
 
             const submissions: Submission[] = [];
@@ -275,6 +269,7 @@ export default function BountyManager() {
                 abi: QUINTY_ABI,
                 functionName: "getSubmissionStruct",
                 args: [BigInt(id), BigInt(i)],
+                chainId: chainId as any,
               });
               if (sData) submissions.push(sData as unknown as Submission);
             }
@@ -415,7 +410,7 @@ export default function BountyManager() {
         if (bountyType !== typeFilter) return false;
       }
       if (statusFilter !== "all") {
-        const isExpired = BigInt(Math.floor(Date.now() / 1000)) > bounty.deadline;
+        const isExpired = now > 0 && BigInt(now) > bounty.deadline;
         const isResolved = bounty.status === 3;
         if (statusFilter === "active" && (isExpired || isResolved)) return false;
         if (statusFilter === "resolved" && !isResolved) return false;
@@ -494,10 +489,13 @@ export default function BountyManager() {
 
           <div className="h-8 w-px bg-white/10" />
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Showing</span>
-            <span className="text-sm font-bold text-white">{filteredBounties.length}</span>
-            <span className="text-sm text-gray-400">bounties</span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Showing</span>
+              <span className="text-sm font-bold text-white">{filteredBounties.length}</span>
+              <span className="text-sm text-gray-400">bounties</span>
+            </div>
+            {/* Indexer status indicator disabled */}
           </div>
         </div>
 
