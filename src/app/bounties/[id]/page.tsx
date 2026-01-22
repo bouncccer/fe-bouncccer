@@ -252,7 +252,7 @@ export default function BountyDetailPage() {
         address: CONTRACT_ADDRESSES[chainId].Quinty as `0x${string}`,
         abi: QUINTY_ABI,
         functionName: "submitSolution",
-        args: [BigInt(bountyId), solutionCid],
+        args: [BigInt(bountyId), solutionCid, [] as `0x${string}`[]], // Added required teamMembers argument
         value: depositAmount,
       });
       setSubmissionCid("");
