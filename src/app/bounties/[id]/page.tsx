@@ -13,6 +13,7 @@ import {
   CONTRACT_ADDRESSES,
   QUINTY_ABI,
   BASE_SEPOLIA_CHAIN_ID,
+  ARBITRUM_SEPOLIA_CHAIN_ID,
 } from "../../../utils/contracts";
 import {
   formatETH,
@@ -89,8 +90,13 @@ const BountyStatusEnum = ["Open Rec", "Open", "Pending Reveal", "Resolved", "Exp
 export default function BountyDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { address } = useAccount();
-  const chainId = useChainId();
+  const { address, isConnected } = useAccount();
+  const walletChainId = useChainId();
+  // Default to Arbitrum Sepolia if not connected or if connected to an unsupported chain
+  const chainId = isConnected && CONTRACT_ADDRESSES[walletChainId]
+    ? walletChainId
+    : ARBITRUM_SEPOLIA_CHAIN_ID;
+
   const isBase = chainId === BASE_SEPOLIA_CHAIN_ID;
   const currencyLabel = isBase ? "ETH" : "ETH"; // Arbitrum uses ETH
   const { showAlert } = useAlert();
@@ -139,6 +145,7 @@ export default function BountyDetailPage() {
         abi: QUINTY_ABI,
         functionName: "getBountyData",
         args: [BigInt(bountyId)],
+        chainId: chainId as any,
       });
 
       if (bountyData) {
@@ -148,6 +155,7 @@ export default function BountyDetailPage() {
           abi: QUINTY_ABI,
           functionName: "getSubmissionCount",
           args: [BigInt(bountyId)],
+          chainId: chainId as any,
         });
 
         const submissions: Submission[] = [];
@@ -157,6 +165,7 @@ export default function BountyDetailPage() {
             abi: QUINTY_ABI,
             functionName: "getSubmissionStruct",
             args: [BigInt(bountyId), BigInt(i)],
+            chainId: chainId as any,
           });
           if (sData) submissions.push(sData as unknown as Submission);
         }
@@ -229,6 +238,11 @@ export default function BountyDetailPage() {
   const submitSolution = async () => {
     if (!bounty || (!uploadedSolutionImage && !submissionCid.trim())) {
       showAlert({ title: "Missing Information", description: "Please upload a solution image or enter an IPFS CID" });
+      return;
+    }
+
+    if (walletChainId !== ARBITRUM_SEPOLIA_CHAIN_ID) {
+      showAlert({ title: "Wrong Network", description: "Please switch to Arbitrum Sepolia to submit." });
       return;
     }
 
